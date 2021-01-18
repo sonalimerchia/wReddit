@@ -3,7 +3,6 @@ import "reflect-metadata";
 import { MikroORM } from "@mikro-orm/core";
 import { __prod__ } from "./constants";
 import microConfig from "./mikro-orm.config";
-
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
@@ -26,17 +25,24 @@ const main = async () => {
   const RedisStore = connectRedis(session);
   const redisClient = redis.createClient();
 
+  // enable cors
+  const corsOptions = {
+    origin: 'http://localhost:3000',
+    credentials: true
+  };
+
   app.use(
       session({
       name: "quid",
       store: new RedisStore({
         client: redisClient,
-        disableTouch: true,
+        disableTouch: true
       }),
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
         httpOnly: true,
-        sameSite: "lax"
+        sameSite: "lax",
+        secure: __prod__
       },
       saveUninitialized: false,
       secret: 'sdfghjkkgfdfghjkuytfd',
@@ -50,12 +56,12 @@ const main = async () => {
     introspection: true,
     schema: await buildSchema({
       resolvers: [HelloResolver, PostResolver, UserResolver],
-      validate: false,
+      validate: false
     }),
     context: ({req, res}) => ({em: orm.em, req: req, res: res})
   });
 
-  apolloServer.applyMiddleware({app});
+  apolloServer.applyMiddleware({app, cors: corsOptions});
 
   // app.get('/path/to/page', (req, res) is a Get-Request where req = request and res = response)
   // use _ as parameter name if not using in implementation

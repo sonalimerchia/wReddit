@@ -1,4 +1,4 @@
-import { Resolver, Mutation, Query, Arg, Ctx, InputType, Field, ObjectType } from "type-graphql";
+import { Resolver, Mutation, Query, Arg, Ctx, InputType, Field, ObjectType, Int } from "type-graphql";
 import { User } from "../entities/User";
 import { MyContext } from "../types";
 import argon2 from "argon2";
@@ -31,10 +31,18 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Query(() => [User])
+  users (
+    @Ctx() {em}: MyContext
+  ): Promise<User[]> {
+      return em.find(User, {});
+  }
+
   @Query(() => User, {nullable: true})
   async me (
     @Ctx() {req, em}: MyContext
   ): Promise<User | null> {
+
     if(!req.session.userId) {
       return null; // not logged in
     }
@@ -55,6 +63,16 @@ export class UserResolver {
           {
             field: "username",
             message: "username length must be greater than 3"
+          }
+        ]
+      }
+    }
+    if (options.password.length <= 3) {
+      return {
+        errors: [
+          {
+            field: "password",
+            message: "password length must be greater than 3"
           }
         ]
       }
@@ -119,5 +137,14 @@ export class UserResolver {
     return {
       user: user
     }
+  }
+
+  @Mutation(() => Boolean)
+  async deleteUser(
+    @Arg('id', () => Int) id:number,
+    @Ctx() {em}: MyContext
+  ): Promise<boolean> {
+    await em.nativeDelete(User, {id});
+    return true;
   }
 }

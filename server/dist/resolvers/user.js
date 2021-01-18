@@ -68,6 +68,9 @@ UserResponse = __decorate([
     type_graphql_1.ObjectType()
 ], UserResponse);
 let UserResolver = class UserResolver {
+    users({ em }) {
+        return em.find(User_1.User, {});
+    }
     me({ req, em }) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!req.session.userId) {
@@ -85,6 +88,16 @@ let UserResolver = class UserResolver {
                         {
                             field: "username",
                             message: "username length must be greater than 3"
+                        }
+                    ]
+                };
+            }
+            if (options.password.length <= 3) {
+                return {
+                    errors: [
+                        {
+                            field: "password",
+                            message: "password length must be greater than 3"
                         }
                     ]
                 };
@@ -139,7 +152,20 @@ let UserResolver = class UserResolver {
             };
         });
     }
+    deleteUser(id, { em }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield em.nativeDelete(User_1.User, { id });
+            return true;
+        });
+    }
 };
+__decorate([
+    type_graphql_1.Query(() => [User_1.User]),
+    __param(0, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "users", null);
 __decorate([
     type_graphql_1.Query(() => User_1.User, { nullable: true }),
     __param(0, type_graphql_1.Ctx()),
@@ -163,6 +189,14 @@ __decorate([
     __metadata("design:paramtypes", [UsernamePasswordInput, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "login", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    __param(0, type_graphql_1.Arg('id', () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "deleteUser", null);
 UserResolver = __decorate([
     type_graphql_1.Resolver()
 ], UserResolver);

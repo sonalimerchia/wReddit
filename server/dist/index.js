@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
 const core_1 = require("@mikro-orm/core");
+const constants_1 = require("./constants");
 const mikro_orm_config_1 = __importDefault(require("./mikro-orm.config"));
 const express_1 = __importDefault(require("express"));
 const apollo_server_express_1 = require("apollo-server-express");
@@ -30,16 +31,21 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const app = express_1.default();
     const RedisStore = connect_redis_1.default(express_session_1.default);
     const redisClient = redis_1.default.createClient();
+    const corsOptions = {
+        origin: 'http://localhost:3000',
+        credentials: true
+    };
     app.use(express_session_1.default({
         name: "quid",
         store: new RedisStore({
             client: redisClient,
-            disableTouch: true,
+            disableTouch: true
         }),
         cookie: {
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
             httpOnly: true,
-            sameSite: "lax"
+            sameSite: "lax",
+            secure: constants_1.__prod__
         },
         saveUninitialized: false,
         secret: 'sdfghjkkgfdfghjkuytfd',
@@ -50,11 +56,11 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         introspection: true,
         schema: yield type_graphql_1.buildSchema({
             resolvers: [hello_1.HelloResolver, post_1.PostResolver, user_1.UserResolver],
-            validate: false,
+            validate: false
         }),
         context: ({ req, res }) => ({ em: orm.em, req: req, res: res })
     });
-    apolloServer.applyMiddleware({ app });
+    apolloServer.applyMiddleware({ app, cors: corsOptions });
     app.get('/', (_, res) => {
         res.send('hello');
     });
