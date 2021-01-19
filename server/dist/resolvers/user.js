@@ -29,13 +29,64 @@ const type_graphql_1 = require("type-graphql");
 const User_1 = require("../entities/User");
 const constants_1 = require("../constants");
 const validateEmail_1 = require("../utils/validateEmail");
+const sendEmail_1 = require("../utils/sendEmail");
 const validateRegister_1 = require("../utils/validateRegister");
 const argon2_1 = __importDefault(require("argon2"));
 const UsernamePasswordInput_1 = require("../objecttypes/UsernamePasswordInput");
 const UserResponse_1 = require("../objecttypes/UserResponse");
+const uuid_1 = require("uuid");
 let UserResolver = class UserResolver {
-    forgotPassword() {
+    changePassword(token, newPassword, { em, req, redis }) {
         return __awaiter(this, void 0, void 0, function* () {
+            const key = constants_1.FORGET_PASSWORD_PREFIX + token;
+            const userIdStr = yield redis.get(key);
+            const userId = parseInt(userIdStr);
+            if (!userId) {
+                return {
+                    errors: [
+                        {
+                            field: "token",
+                            message: "token expired"
+                        }
+                    ]
+                };
+            }
+            const validationErrors = validateRegister_1.validatePassword(newPassword);
+            if (validationErrors) {
+                return {
+                    errors: validationErrors
+                };
+            }
+            const user = yield em.findOne(User_1.User, { id: userId });
+            if (!user) {
+                return {
+                    errors: [
+                        {
+                            field: "token",
+                            message: "user no longer exists"
+                        }
+                    ]
+                };
+            }
+            user.password = yield argon2_1.default.hash(newPassword);
+            yield em.persistAndFlush(user);
+            redis.del(key);
+            req.session.userId = userId;
+            return {
+                user: user
+            };
+        });
+    }
+    forgotPassword(email, { em, redis }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield em.findOne(User_1.User, { email: email.toLowerCase() });
+            if (!user) {
+                return true;
+            }
+            const token = uuid_1.v4();
+            yield redis.set(constants_1.FORGET_PASSWORD_PREFIX + token, user.id, 'ex', 1000 * 60 * 60 * 24 * 3);
+            const link = constants_1.FRONTEND_URL + '/change-password/' + token;
+            yield sendEmail_1.sendEmail(email, "Reset Password", `<a href="${link}">reset password</a>`);
             return true;
         });
     }
@@ -53,9 +104,9 @@ let UserResolver = class UserResolver {
     }
     register(options, { em, req }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const errors = validateRegister_1.validateRegister(options);
-            if (errors) {
-                return { errors: errors };
+            const validationErrors = validateRegister_1.validateRegister(options);
+            if (validationErrors) {
+                return { errors: validationErrors };
             }
             const hashedPassword = yield argon2_1.default.hash(options.password);
             const user = em.create(User_1.User, {
@@ -141,9 +192,20 @@ let UserResolver = class UserResolver {
     }
 };
 __decorate([
-    type_graphql_1.Mutation(() => Boolean),
+    type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
+    __param(0, type_graphql_1.Arg("token")),
+    __param(1, type_graphql_1.Arg("newPassword")),
+    __param(2, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "changePassword", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    __param(0, type_graphql_1.Arg('email')),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "forgotPassword", null);
 __decorate([

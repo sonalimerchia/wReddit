@@ -29,7 +29,11 @@ export const validateRegister = (options : UsernamePasswordInput) => {
     ];
   }
 
-  if (options.password.length <= 3) {
+  return validatePassword(options.password);
+}
+
+export const validatePassword = (password: string) => {
+  if (password.length <= 3) {
     return [
         {
           field: "password",
@@ -37,6 +41,4 @@ export const validateRegister = (options : UsernamePasswordInput) => {
         }
     ];
   }
-
-  return null;
 }

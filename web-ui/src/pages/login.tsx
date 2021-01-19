@@ -2,7 +2,8 @@ import React from "react";
 import {Formik, Form} from "formik";
 import {Wrapper} from "../components/Wrapper";
 import {InputField} from "../components/InputField";
-import {Box, Button} from "@chakra-ui/react";
+import {Box, Button, Flex, Link} from "@chakra-ui/react";
+import NextLink from "next/link";
 import {useLoginMutation} from "../generated/graphql";
 import {toErrorMap} from "../utils/toErrorMap.ts";
 import {useRouter} from "next/router";
@@ -19,7 +20,6 @@ const Login: React.FC<{}> = ({}) => {
         initialValues={{usernameOrEmail: '', password: ''}}
         onSubmit={async (values, {setErrors}) => {
           const response = await login(values);
-          console.log(response);
           if (response.data?.login.errors) {
             setErrors(toErrorMap(response.data.login.errors));
           } else if (response.data?.login.user) {
@@ -39,6 +39,11 @@ const Login: React.FC<{}> = ({}) => {
                             label='Password'
                             type='password' />
               </Box>
+              <Flex>
+                <NextLink href='/forgot-password'>
+                  <Link ml='auto'>Forgot Password?</Link>
+                </NextLink>
+              </Flex>
               <Button mt={4}
                 type='submit'
                 isLoading={isSubmitting}

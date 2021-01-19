@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateRegister = void 0;
+exports.validatePassword = exports.validateRegister = void 0;
 const validateEmail_1 = require("./validateEmail");
 const validateRegister = (options) => {
     if (!validateEmail_1.isValidEmail(options.email)) {
@@ -27,7 +27,11 @@ const validateRegister = (options) => {
             }
         ];
     }
-    if (options.password.length <= 3) {
+    return exports.validatePassword(options.password);
+};
+exports.validateRegister = validateRegister;
+const validatePassword = (password) => {
+    if (password.length <= 3) {
         return [
             {
                 field: "password",
@@ -35,7 +39,6 @@ const validateRegister = (options) => {
             }
         ];
     }
-    return null;
 };
-exports.validateRegister = validateRegister;
+exports.validatePassword = validatePassword;
 //# sourceMappingURL=validateRegister.js.map
