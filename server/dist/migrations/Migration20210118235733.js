@@ -9,17 +9,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Migration20210118235733 = void 0;
-const migrations_1 = require("@mikro-orm/migrations");
-class Migration20210118235733 extends migrations_1.Migration {
-    up() {
+exports.Initial20210118235733 = void 0;
+class Initial20210118235733 {
+    constructor() {
+        this.name = 'Initial20210118235733';
+    }
+    up(queryRunner) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.addSql('create table "user" ("id" serial primary key, "created_at" timestamptz(0) not null, "updated_at" timestamptz(0) not null, "username" text not null, "email" text not null, "password" text not null);');
-            this.addSql('alter table "user" add constraint "user_username_unique" unique ("username");');
-            this.addSql('alter table "user" add constraint "user_email_unique" unique ("email");');
-            this.addSql('create table "post" ("id" serial primary key, "created_at" timestamptz(0) not null, "updated_at" timestamptz(0) not null, "title" text not null);');
+            yield queryRunner.query('create table "user" ("id" serial primary key, "created_at" timestamptz(0) not null, "updated_at" timestamptz(0) not null, "username" text not null, "email" text not null, "password" text not null);');
+            yield queryRunner.query('alter table "user" add constraint "user_username_unique" unique ("username");');
+            yield queryRunner.query('alter table "user" add constraint "user_email_unique" unique ("email");');
+            yield queryRunner.query('create table "post" ("id" serial primary key, "created_at" timestamptz(0) not null, "updated_at" timestamptz(0) not null, "title" text not null);');
+        });
+    }
+    down(queryRunner) {
+        return __awaiter(this, void 0, void 0, function* () {
         });
     }
 }
-exports.Migration20210118235733 = Migration20210118235733;
+exports.Initial20210118235733 = Initial20210118235733;
 //# sourceMappingURL=Migration20210118235733.js.map

@@ -39,6 +39,7 @@ const validatePassword = (password) => {
             }
         ];
     }
+    return null;
 };
 exports.validatePassword = validatePassword;
 //# sourceMappingURL=validateRegister.js.map

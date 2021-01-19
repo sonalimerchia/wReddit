@@ -41,4 +41,6 @@ export const validatePassword = (password: string) => {
         }
     ];
   }
+
+  return null;
 }
