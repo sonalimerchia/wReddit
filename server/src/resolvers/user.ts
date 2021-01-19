@@ -1,36 +1,27 @@
-import { Resolver, Mutation, Query, Arg, Ctx, InputType, Field, ObjectType, Int } from "type-graphql";
+import { Resolver, Mutation, Query, Arg, Ctx, Int } from "type-graphql";
 import { User } from "../entities/User";
 import { MyContext } from "../types";
+import {COOKIE_NAME} from "../constants";
+
+import {isValidEmail} from "../utils/validateEmail";
+import {validateRegister} from "../utils/validateRegister";
 import argon2 from "argon2";
 
-@InputType()
-class UsernamePasswordInput {
-  @Field()
-  username: string;
-  @Field()
-  password: string;
-}
-
-@ObjectType()
-class FieldError {
-  @Field()
-  field: string;
-
-  @Field()
-  message: string;
-}
-
-@ObjectType()
-class UserResponse {
-  @Field(() => [FieldError], {nullable: true})
-  errors?: FieldError[];
-
-  @Field(() => User, {nullable: true})
-  user?: User;
-}
+import {UsernamePasswordInput} from "../objecttypes/UsernamePasswordInput";
+import {UserResponse} from "../objecttypes/UserResponse";
 
 @Resolver()
 export class UserResolver {
+  @Mutation(() => Boolean)
+  async forgotPassword (
+  //  @Arg('email') email: string,
+  //  @Ctx() {em}: MyContext
+  ){
+    //const user = await em.findOne(User, {email.toLowerCase()})
+    return true;
+  }
+
+
   @Query(() => [User])
   users (
     @Ctx() {em}: MyContext
@@ -54,44 +45,43 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async register(
-    @Arg('options') options: UsernamePasswordInput,
-    @Ctx() {em, req}: MyContext
+   @Arg('options') options: UsernamePasswordInput,
+   @Ctx() {em, req}: MyContext
   ): Promise<UserResponse> {
-    if (options.username.length <= 3) {
-      return {
-        errors: [
-          {
-            field: "username",
-            message: "username length must be greater than 3"
-          }
-        ]
-      }
-    }
-    if (options.password.length <= 3) {
-      return {
-        errors: [
-          {
-            field: "password",
-            message: "password length must be greater than 3"
-          }
-        ]
-      }
+
+    const errors = validateRegister(options);
+    if (errors) {
+      return {errors: errors};
     }
 
     const hashedPassword = await argon2.hash(options.password);
     const user = em.create(User, {
       username: options.username.toLowerCase(),
+      email: options.email.toLowerCase(),
       password: hashedPassword
     });
     try {
       await em.persistAndFlush(user);
     } catch(err) {
-      if (err.code = '23505' || err.detail.includes("already exists")) {
-        return {
-          errors: [{
-            field: "username",
-            message: "this username has already been taken"
-          }]
+      if (err.code = '23505') {
+        if (err.constraint === 'user_email_unique') {
+          return {
+            errors: [
+              {
+                field: "email",
+                message: "this email already has an account"
+              }
+            ]
+          };
+        } else {
+          return {
+            errors: [
+              {
+                field: "username",
+                message: "this username is taken"
+              }
+            ]
+          };
         }
       }
     }
@@ -106,22 +96,23 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async login(
-    @Arg('options') options: UsernamePasswordInput,
+    @Arg('usernameOrEmail') usernameOrEmail: string,
+    @Arg('password') password: string,
     @Ctx() {em, req}: MyContext
   ): Promise<UserResponse> {
     // Find username
-    const user = await em.findOne(User, {username: options.username.toLowerCase()})
+    const user = await em.findOne(User, isValidEmail(usernameOrEmail) ? {email: usernameOrEmail} : {username: usernameOrEmail});
     if (!user) {
       return {
         errors: [{
-          field: "username",
+          field: "usernameOrEmail",
           message: "username does not exist"
         }]
       }
     }
 
     // Verify password
-    const valid = await argon2.verify(user.password, options.password);
+    const valid = await argon2.verify(user.password, password);
     if (!valid) {
       return {
         errors: [{
@@ -146,5 +137,22 @@ export class UserResolver {
   ): Promise<boolean> {
     await em.nativeDelete(User, {id});
     return true;
+  }
+
+  @Mutation(() => Boolean)
+  logout(
+    @Ctx() {req, res}: MyContext
+  ) {
+    return new Promise((resolve) =>
+      req.session.destroy((err) => {
+        res.clearCookie(COOKIE_NAME);
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+        resolve(true);
+      })
+    );
   }
 }
