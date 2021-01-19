@@ -1,6 +1,6 @@
 /node_modules
 ./yarn-error.log
 ./yarn.lock
-# /src/mikro-orm.config.ts
-# /dist/mikro-orm.config.js
-# /dist/mikro-orm.config.js.map
+/src/mikro-orm.config.ts
+/dist/mikro-orm.config.js
+/dist/mikro-orm.config.js.map
