@@ -4,8 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  BaseEntity} from "typeorm";
+  BaseEntity, 
+  ManyToOne } from "typeorm";
 import { ObjectType, Field } from "type-graphql";
+import { User } from "./User";
 
 @ObjectType()
 @Entity()
@@ -25,4 +27,9 @@ export class Post extends BaseEntity {
   @Field()
   @Column()
   title!: string;
+
+  @Field()
+  @ManyToOne(() => User, user => user.posts)
+  author: User;
+
 }
