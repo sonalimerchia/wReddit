@@ -23,6 +23,7 @@ const user_1 = require("./resolvers/user");
 const ioredis_1 = __importDefault(require("ioredis"));
 const express_session_1 = __importDefault(require("express-session"));
 const connect_redis_1 = __importDefault(require("connect-redis"));
+const cors_1 = __importDefault(require("cors"));
 const typeorm_config_1 = require("./typeorm-config");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const conn = yield typeorm_config_1.getTypeormConnection();
@@ -33,6 +34,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         origin: constants_1.FRONTEND_URL,
         credentials: true
     };
+    app.use(cors_1.default(corsOptions));
     app.use(express_session_1.default({
         name: constants_1.COOKIE_NAME,
         store: new RedisStore({
@@ -58,7 +60,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         }),
         context: ({ req, res }) => ({ req: req, res: res, redis: redis })
     });
-    apolloServer.applyMiddleware({ app, cors: corsOptions });
+    apolloServer.applyMiddleware({ app, cors: false });
     app.get('/', (_, res) => {
         res.send('hello');
     });

@@ -37,9 +37,9 @@ __decorate([
 ], Post.prototype, "title", void 0);
 __decorate([
     type_graphql_1.Field(),
-    typeorm_1.ManyToOne(() => User_1.User, user => user.posts),
+    typeorm_1.ManyToOne(() => User_1.User, (user) => user.posts),
     __metadata("design:type", User_1.User)
-], Post.prototype, "author", void 0);
+], Post.prototype, "creator", void 0);
 Post = __decorate([
     type_graphql_1.ObjectType(),
     typeorm_1.Entity()

@@ -113,12 +113,12 @@ let UserResolver = class UserResolver {
                 password: hashedPassword
             });
             try {
-                user.save();
+                yield user.save();
             }
-            catch (err) {
-                console.log("err: ", err);
-                if (err.code = '23505') {
-                    if (err.constraint === 'user_email_unique') {
+            catch (error) {
+                console.log("err: ", error);
+                if (error.code = '23505') {
+                    if (error.constraint === 'user_email_unique') {
                         return {
                             errors: [
                                 {

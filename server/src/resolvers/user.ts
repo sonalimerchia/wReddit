@@ -118,11 +118,11 @@ export class UserResolver {
       });
 
     try {
-      user.save();
-    } catch(err) {
-      console.log("err: ", err);
-      if (err.code = '23505') {
-        if (err.constraint === 'user_email_unique') {
+      await user.save();
+    } catch(error) {
+      console.log("err: ", error);
+      if (error.code = '23505') {
+        if (error.constraint === 'user_email_unique') {
           return {
             errors: [
               {

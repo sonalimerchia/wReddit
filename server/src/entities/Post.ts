@@ -29,7 +29,6 @@ export class Post extends BaseEntity {
   title!: string;
 
   @Field()
-  @ManyToOne(() => User, user => user.posts)
-  author: User;
-
+  @ManyToOne(() => User, (user) => user.posts)
+  creator: User;
 }

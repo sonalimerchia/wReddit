@@ -10,12 +10,13 @@ import { UserResolver } from "./resolvers/user";
 import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
+import cors from "cors";
 import {getTypeormConnection} from "./typeorm-config";
 
 const main = async () => {
   // Create database connection
   const conn = await getTypeormConnection();
-
+  
   // Create connection to server
   const app = express();
 
@@ -28,6 +29,8 @@ const main = async () => {
     origin: FRONTEND_URL,
     credentials: true
   };
+
+  app.use(cors(corsOptions));
 
   app.use(
       session({
@@ -59,7 +62,7 @@ const main = async () => {
     context: ({req, res}) => ({req: req, res: res, redis:redis})
   });
 
-  apolloServer.applyMiddleware({app, cors: corsOptions});
+  apolloServer.applyMiddleware({app, cors: false});
 
   // app.get('/path/to/page', (req, res) is a Get-Request where req = request and res = response)
   // use _ as parameter name if not using in implementation
